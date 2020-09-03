@@ -88,6 +88,10 @@ export interface IConnectionDetailsPageProps {
   edit: boolean;
 }
 
+export interface IConnectionDetailsInitialValues {
+  [key: string]: string;
+}
+
 export const ConnectionDetailsPage: React.FunctionComponent<IConnectionDetailsPageProps> = ({
   edit,
 }) => {
@@ -115,6 +119,29 @@ export const ConnectionDetailsPage: React.FunctionComponent<IConnectionDetailsPa
       return i18n.t('connections:usedByOne');
     }
     return i18n.t('connections:usedByMulti', { count: numUsedBy });
+  };
+
+  const getInitialValues = (
+    initialValues?: IConnectionDetailsInitialValues
+  ): IConnectionDetailsInitialValues => {
+    const newObj = {};
+
+    Object.keys(initialValues!).map(key => {
+      const value = initialValues![key];
+      /**
+       * Syndesis's API returns a JSON encoded array,
+       * so we parse it here.
+       */
+      try {
+        newObj[key] = JSON.parse(value);
+      } catch (e) {
+        newObj[key] = value;
+      }
+
+      return newObj;
+    });
+
+    return newObj as IConnectionDetailsInitialValues;
   };
 
   const save = async ({
@@ -256,7 +283,7 @@ export const ConnectionDetailsPage: React.FunctionComponent<IConnectionDetailsPa
         {() => (
           <WithConnectorForm
             connector={connection.connector!}
-            initialValue={connection.configuredProperties}
+            initialValue={getInitialValues(connection.configuredProperties)}
             disabled={!edit}
             onSave={saveConnector}
             key={`${location.key} - ${connection.lastUpdated}`}
